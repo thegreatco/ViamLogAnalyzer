@@ -1,0 +1,16 @@
+{
+  "profiles": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "Analyze": {
+      "commandName": "Project",
+      "commandLineArgs": "analyze -a timegap \"C:\\Users\\TheGreatCO\\Downloads\\viam.logs\""
+    },
+    "Parse": {
+      "commandName": "Project",
+      "commandLineArgs": "parse \"C:\\Users\\TheGreatCO\\Downloads\\viam.logs\""
+    }
+  }
+}
