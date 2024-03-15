@@ -22,13 +22,23 @@ namespace CLI.Commands.Analyze
             var startupTimeAnalyzer = new StartupTimeAnalyzer(results);
             analyzerTasks.Add(startupTimeAnalyzer.Analyze());
 
+            var pipInstallDetectionAnalyzer = new PipInstallDetectionAnalyzer(results);
+            analyzerTasks.Add(pipInstallDetectionAnalyzer.Analyze());
+
+            var slowModuleStartupAnalyzer = new SlowModuleStartupAnalyzer(results);
+            analyzerTasks.Add(slowModuleStartupAnalyzer.Analyze());
+
             await Task.WhenAll(analyzerTasks);
             var table = new Table().LeftAligned().AddColumn("Analyzer").AddColumn("Results");
             AnsiConsole.Live(table).Start(ctx =>
             {
-                table.AddRow(new Text(typeof(TimeGapAnalyzer).Name), timeGapAnalyzer.RenderConsoleResults());
+                table.AddRow(new Text(nameof(TimeGapAnalyzer)), timeGapAnalyzer.RenderConsoleResults());
                 ctx.Refresh();
-                table.AddRow(new Text(typeof(StartupTimeAnalyzer).Name), startupTimeAnalyzer.RenderConsoleResults());
+                table.AddRow(new Text(nameof(StartupTimeAnalyzer)), startupTimeAnalyzer.RenderConsoleResults());
+                ctx.Refresh();
+                table.AddRow(new Text(nameof(PipInstallDetectionAnalyzer)), pipInstallDetectionAnalyzer.RenderConsoleResults());
+                ctx.Refresh();
+                table.AddRow(new Text(nameof(SlowModuleStartupAnalyzer)), slowModuleStartupAnalyzer.RenderConsoleResults());
                 ctx.Refresh();
             });
             return 0;

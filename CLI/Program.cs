@@ -1,5 +1,7 @@
 ﻿using CLI.Commands.Analyze;
 using CLI.Commands.Parse;
+
+using Spectre.Console;
 using Spectre.Console.Cli;
 
 var app = new CommandApp();
@@ -10,4 +12,12 @@ app.Configure(config =>
     config.AddCommand<AnalyzeCommand>("analyze");
 });
 
-return app.Run(args);
+try
+{
+    return app.Run(args);
+}
+catch (Exception ex)
+{
+    AnsiConsole.WriteException(ex, ExceptionFormats.ShortenEverything);
+    return -1;
+}

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <linker>
-	<assembly fullname="CLI" />
+	<assembly fullname="vlogger" />
 	<assembly fullname="Spectre.Console.Cli">
 		<type fullname="Spectre.Console.Cli.ExplainCommand" />
 		<type fullname="Spectre.Console.Cli.XmlDocCommand" />

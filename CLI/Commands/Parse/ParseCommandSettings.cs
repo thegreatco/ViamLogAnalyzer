@@ -26,6 +26,14 @@ namespace CLI.Commands.Parse
         [CommandOption("-I|--ignore-log-levels <LEVELS>")]
         public string[]? IgnoreLogLevels { get; set; }
 
+        [Description("The start date for the log entries")]
+        [CommandOption("-s|--since <SINCE>")]
+        public DateTimeOffset? Since { get; set; }
+
+        [Description("The end date for the log entries")]
+        [CommandOption("-u|--until <UNTIL>")]
+        public DateTimeOffset? Until { get; set; }
+
         public override ValidationResult Validate()
         {
             if (string.IsNullOrEmpty(LogFilePath)) 

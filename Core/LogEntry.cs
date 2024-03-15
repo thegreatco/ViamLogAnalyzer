@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Buffers;
+using System.Diagnostics;
 
 namespace Core
 {
@@ -7,7 +8,10 @@ namespace Core
         public LogEntry(string line, string? nextLogEntry)
         {
             RawEntry = line;
-
+            //if (RawEntry.Contains("2024-03-14T18:40:27.963248") && Debugger.IsAttached)
+            //{
+            //    Debugger.Break();
+            //}
             var m = line.AsMemory();
             var datetimeLength = m.Span.IndexOf(" ");
             try
@@ -74,8 +78,45 @@ namespace Core
 
                         if (n.Span.StartsWith("2"))
                         {
-                            (n, var moduleTimestamp) = ParseNextField(n, "  ");
-                            ModuleTimestamp = DateTimeOffset.Parse(moduleTimestamp.Span);
+                            (n, var moduleTimestamp) = ParseNextField(n, " ");
+                            // This bit is a little complicated, but it's to handle the case where the time and date are split with a space instead of a "T"
+                            if (char.IsAsciiDigit(n.Span[0]))
+                            {
+                                // So we parse out the next field
+                                (n, var secondTimestampPart) = ParseNextField(n, " ");
+
+                                // Then we allocate a new array to hold the two parts and a space
+                                var arr = ArrayPool<char>.Shared.Rent(moduleTimestamp.Length + secondTimestampPart.Length + 1);
+                                try
+                                {
+                                    // Copy the date portion into the array
+                                    for (var i = 0; i < moduleTimestamp.Length; i++)
+                                    {
+                                        arr[i] = moduleTimestamp.Span[i];
+                                    }
+
+                                    // Add a space in there to reassemble like it was
+                                    arr[moduleTimestamp.Length] = ' '; // [0x20 
+
+                                    // Now copy the time portion into the array
+                                    for (var i = 0; i < secondTimestampPart.Length; i++)
+                                    {
+                                        arr[i + moduleTimestamp.Length + 1] = secondTimestampPart.Span[i];
+                                    }
+
+                                    // Now we're free to parse the whole thing
+                                    ModuleTimestamp = DateTimeOffset.Parse(arr.AsSpan(0, moduleTimestamp.Length + secondTimestampPart.Length + 1));
+                                }
+                                finally
+                                {
+                                    // Don't forget to return the memory back to the pool
+                                    ArrayPool<char>.Shared.Return(arr);
+                                }
+                            }
+                            else
+                            {
+                                ModuleTimestamp = DateTimeOffset.Parse(moduleTimestamp.Span);
+                            }
                         }
 
                         (var b, n) = JumpToLog(n, "DEBUG", "INFO", "WARN", "ERROR");
@@ -145,6 +186,6 @@ namespace Core
         public string? ModuleLogLevel { get; }
 
         public string? Message { get; }
-        public string? RawEntry { get; }
+        public string RawEntry { get; }
     }
 }

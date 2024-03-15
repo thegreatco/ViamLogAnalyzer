@@ -26,8 +26,12 @@ namespace CLI.Commands.Parse
                                             "Message");
                            ctx.Refresh();
                            var a = 0;
+                           var start = settings.Since.GetValueOrDefault(DateTimeOffset.MinValue);
+                           var end = settings.Until.GetValueOrDefault(DateTimeOffset.MaxValue);
                            foreach (var i in res.LogEntries)
                            {
+                               if (i.SystemdTimestamp < start || i.SystemdTimestamp > end)
+                                   continue;
                                if (settings.Loggers?.Contains(i.Logger) == false)
                                    continue;
                                if (settings.LogLevels?.Contains(i.LogLevel) == false)

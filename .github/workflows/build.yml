@@ -1,0 +1,133 @@
+name: C#
+on:
+  push:
+  release:
+    types: [published]
+  pull_request_target:
+    branches: [ "main" ]
+
+jobs:
+  build-linux:
+    strategy:
+      matrix:
+        runner: [ ubuntu-22.04 ]
+        arch: [ arm64, amd64 ]
+    runs-on: ${{ matrix.runner }}
+    env:
+      os: linux
+      suffix: ''
+      arch: ${{contains(matrix.arch, 'arm') && 'arm64' || contains(matrix.arch, 'amd64') && 'amd64' || 'unknown'}}
+    steps:
+    - name: Check out code
+      if: github.event_name != 'pull_request_target'
+      uses: actions/checkout@v4
+
+    - name: Check out PR branch code
+      if: github.event_name == 'pull_request_target'
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 0
+    - name: add arm64 deps
+      if: contains(matrix.arch, 'arm')
+      run: |
+        sudo dpkg --add-architecture arm64
+        sudo bash -c 'cat > /etc/apt/sources.list.d/arm64.list <<EOF
+        deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ jammy main restricted
+        deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ jammy-updates main restricted
+        deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports/ jammy-backports main restricted universe multiverse
+        EOF'
+        sudo sed -i -e 's/deb http/deb [arch=amd64] http/g' /etc/apt/sources.list
+        sudo sed -i -e 's/deb mirror/deb [arch=amd64] mirror/g' /etc/apt/sources.list
+        sudo apt update
+        sudo apt install -y clang llvm binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu zlib1g-dev:arm64
+
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.x
+        dotnet-quality: ga
+
+    - name: Restore
+      run: dotnet restore
+    - name: Build
+      run: dotnet publish -c Release -r ${{ env.os }}-${{ matrix.arch }} -p:PublishTrimmed=true -o build CLI\\CLI.csproj
+    - run: ls -la build
+    - uses: actions/upload-artifact@v4
+      with:
+        name: vlogger-${{ env.os }}-${{ matrix.arch }}${{ env.suffix }}
+        path: build/vlogger${{ env.suffix }}
+  build-macos:
+    strategy:
+      matrix:
+        runner: [ macos-latest ]
+        arch: [ x64, arm64 ]
+    runs-on: ${{ matrix.runner }}
+    env:
+      os: ${{contains(matrix.runner, 'ubuntu') && 'linux' || contains(matrix.runner, 'macos') && 'osx' || contains(matrix.runner, 'windows') && 'win' || 'unknown'}}
+      suffix: ${{ contains(matrix.runner, 'windows') && '.exe' || '' }}
+    steps:
+    - name: Check out code
+      if: github.event_name != 'pull_request_target'
+      uses: actions/checkout@v4
+
+    - name: Check out PR branch code
+      if: github.event_name == 'pull_request_target'
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 0
+
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.x
+        dotnet-quality: ga
+
+    - name: Restore
+      run: dotnet restore CLI\\CLI.csproj
+    - name: Build
+      run: dotnet publish -c Release -r ${{ env.os }}-${{ matrix.arch }} -p:PublishTrimmed=true -o build CLI\\CLI.csproj
+
+    - run: ls -la build
+    - uses: actions/upload-artifact@v4
+      with:
+        name: vlogger-${{ env.os }}-${{ matrix.arch }}
+        path: build/vlogger
+  build-windows:
+    strategy:
+      matrix:
+        runner: [ windows-latest ]
+        arch: [ x64, arm64 ]
+    runs-on: ${{ matrix.runner }}
+    env:
+      os: ${{contains(matrix.runner, 'ubuntu') && 'linux' || contains(matrix.runner, 'macos') && 'osx' || contains(matrix.runner, 'windows') && 'win' || 'unknown'}}
+      suffix: ${{ contains(matrix.runner, 'windows') && '.exe' || '' }}
+    steps:
+    - name: Check out code
+      if: github.event_name != 'pull_request_target'
+      uses: actions/checkout@v4
+
+    - name: Check out PR branch code
+      if: github.event_name == 'pull_request_target'
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 0
+    - run: systeminfo
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.x
+        dotnet-quality: ga
+
+    - name: Restore
+      run: dotnet restore CLI\\CLI.csproj
+    - name: Build
+      # the -p:DisableUnsupportedError=true is required because for some reason on github runners, $(OS) evaluates to "win" not "Windows_NT"
+      run: dotnet publish -c Release -r ${{ env.os }}-${{ matrix.arch }} -p:PublishTrimmed=true -p:DisableUnsupportedError=true -o build CLI\\CLI.csproj
+    - run: ls .\build
+    - uses: actions/upload-artifact@v4
+      with:
+        name: vlogger-${{ env.os }}-${{ matrix.arch }}.exe
+        path: build\vlogger.exe
