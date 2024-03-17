@@ -5,6 +5,8 @@ on:
     types: [published]
   pull_request_target:
     branches: [ "main" ]
+permissions:
+  contents: write
 
 jobs:
   build-linux:
@@ -15,8 +17,8 @@ jobs:
     runs-on: ${{ matrix.runner }}
     env:
       os: linux
-      suffix: ''
       arch: ${{contains(matrix.arch, 'arm') && 'arm64' || contains(matrix.arch, 'amd64') && 'amd64' || 'unknown'}}
+      suffix: ${{ contains(matrix.runner, 'windows') && '.exe' || '' }}
     steps:
     - name: Check out code
       if: github.event_name != 'pull_request_target'
@@ -51,12 +53,20 @@ jobs:
     - name: Restore
       run: dotnet restore
     - name: Build
-      run: dotnet publish -c Release -r ${{ env.os }}-${{ matrix.arch }} -p:PublishTrimmed=true -o build CLI\\CLI.csproj
+      run: dotnet publish -c Release -r ${{ env.os }}-${{ matrix.arch }} -p:PublishTrimmed=true -o build CLI/CLI.csproj
     - run: ls -la build
+    - name: Move File
+      run: mv build/vlogger${{ env.suffix }} build/vlogger-${{ env.os }}-${{ matrix.arch }}${{ env.suffix }}
     - uses: actions/upload-artifact@v4
       with:
         name: vlogger-${{ env.os }}-${{ matrix.arch }}${{ env.suffix }}
-        path: build/vlogger${{ env.suffix }}
+        path: build/vlogger-${{ env.os }}-${{ matrix.arch }}${{ env.suffix }}
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        draft: true
+        files: build/vlogger-${{ env.os }}-${{ matrix.arch }}${{ env.suffix }}
   build-macos:
     strategy:
       matrix:
@@ -85,15 +95,23 @@ jobs:
         dotnet-quality: ga
 
     - name: Restore
-      run: dotnet restore CLI\\CLI.csproj
+      run: dotnet restore CLI/CLI.csproj
     - name: Build
-      run: dotnet publish -c Release -r ${{ env.os }}-${{ matrix.arch }} -p:PublishTrimmed=true -o build CLI\\CLI.csproj
+      run: dotnet publish -c Release -r ${{ env.os }}-${{ matrix.arch }} -p:PublishTrimmed=true -o build CLI/CLI.csproj
 
     - run: ls -la build
+    - name: Move File
+      run: mv build/vlogger${{ env.suffix }} build/vlogger-${{ env.os }}-${{ matrix.arch }}${{ env.suffix }}
     - uses: actions/upload-artifact@v4
       with:
-        name: vlogger-${{ env.os }}-${{ matrix.arch }}
-        path: build/vlogger
+        name: vlogger-${{ env.os }}-${{ matrix.arch }}${{ env.suffix }}
+        path: build/vlogger-${{ env.os }}-${{ matrix.arch }}${{ env.suffix }}
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        draft: true
+        files: build/vlogger-${{ env.os }}-${{ matrix.arch }}${{ env.suffix }}
   build-windows:
     strategy:
       matrix:
@@ -122,12 +140,20 @@ jobs:
         dotnet-quality: ga
 
     - name: Restore
-      run: dotnet restore CLI\\CLI.csproj
+      run: dotnet restore CLI/CLI.csproj
     - name: Build
       # the -p:DisableUnsupportedError=true is required because for some reason on github runners, $(OS) evaluates to "win" not "Windows_NT"
-      run: dotnet publish -c Release -r ${{ env.os }}-${{ matrix.arch }} -p:PublishTrimmed=true -p:DisableUnsupportedError=true -o build CLI\\CLI.csproj
-    - run: ls .\build
+      run: dotnet publish -c Release -r ${{ env.os }}-${{ matrix.arch }} -p:PublishTrimmed=true -p:DisableUnsupportedError=true -o build CLI/CLI.csproj
+    - run: ls ./build
+    - name: Move File
+      run: mv build/vlogger${{ env.suffix }} build/vlogger-${{ env.os }}-${{ matrix.arch }}${{ env.suffix }}
     - uses: actions/upload-artifact@v4
       with:
-        name: vlogger-${{ env.os }}-${{ matrix.arch }}.exe
-        path: build\vlogger.exe
+        name: vlogger-${{ env.os }}-${{ matrix.arch }}${{ env.suffix }}
+        path: build/vlogger-${{ env.os }}-${{ matrix.arch }}${{ env.suffix }}
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        draft: true
+        files: build/vlogger-${{ env.os }}-${{ matrix.arch }}${{ env.suffix }}
