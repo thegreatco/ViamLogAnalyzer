@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-using Core.Parsers;
+﻿using Core.Parsers;
 
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -9,8 +7,45 @@ namespace CLI.Commands.Parse
 {
     internal class ParseCommand : AsyncCommand<ParseCommandSettings>
     {
+        private ParseCommandSettings PromptForSettings()
+        {
+            var settings = new ParseCommandSettings();
+            settings.LogFilePath = AnsiConsole.Ask<string>("File to parse:");
+
+            AnsiConsole.WriteLine("separate multiple values with a comma");
+            
+            var loggers = AnsiConsole.Ask("Loggers to include", string.Empty);
+            var loggersArray =
+                loggers.Split(",", StringSplitOptions.RemoveEmptyEntries|StringSplitOptions.TrimEntries);
+            if (loggersArray.Length > 0 )
+                settings.Loggers = loggersArray;
+
+            var ignoreLoggers = AnsiConsole.Ask("Loggers to exclude", string.Empty);
+            var ignoreLoggersArray=
+                ignoreLoggers.Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (ignoreLoggersArray.Length > 0 )
+                settings.IgnoreLoggers = ignoreLoggersArray;
+
+            var logLevels = AnsiConsole.Ask("Log levels to include", string.Empty);
+            var logLevelsArray =
+                logLevels.Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (logLevelsArray.Length > 0 )
+                settings.LogLevels = logLevelsArray;
+            
+            var ignoreLogLevels = AnsiConsole.Ask("Log levels to exclude", string.Empty);
+            var ignoreLogLevelsArray =
+                ignoreLogLevels.Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (ignoreLogLevelsArray.Length > 0)
+                settings.IgnoreLogLevels = ignoreLoggersArray;
+
+            return settings;
+        }
+
         public override async Task<int> ExecuteAsync(CommandContext context, ParseCommandSettings settings)
         {
+            if (settings == ParseCommandSettings.Empty)
+                settings = PromptForSettings();
+
             var parser = new FileParser(settings.LogFilePath!);
             var res = await parser.Parse();
             var table = new Table().LeftAligned();

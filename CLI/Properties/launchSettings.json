@@ -11,6 +11,10 @@
     "Parse": {
       "commandName": "Project",
       "commandLineArgs": "parse \"C:\\Users\\TheGreatCO\\Downloads\\viam.logs\""
+    },
+    "Default": {
+      "commandName": "Project",
+      "commandLineArgs": ""
     }
   }
 }

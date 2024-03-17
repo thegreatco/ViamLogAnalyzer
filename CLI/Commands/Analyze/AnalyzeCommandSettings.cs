@@ -7,6 +7,8 @@ namespace CLI.Commands.Analyze
 {
     internal class AnalyzeCommandSettings : CommandSettings
     {
+        public static AnalyzeCommandSettings Empty = new AnalyzeCommandSettings();
+
         [Description("The file to parse")]
         [CommandArgument(0, "<LogFilePath>")]
         public string? LogFilePath { get; set; }

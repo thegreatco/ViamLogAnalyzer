@@ -8,13 +8,14 @@
 		<Nullable>enable</Nullable>
 		<PublishAot>true</PublishAot>
 		<IsAotCompatible>true</IsAotCompatible>
-		<InvariantGlobalization>true</InvariantGlobalization>
 		<OptimizationPreference>Speed</OptimizationPreference>
 		<AssemblyName>vlogger</AssemblyName>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Humanizer.Core" Version="2.14.1" />
 		<PackageReference Include="Spectre.Console.Cli" Version="0.48.0" />
+		<PackageReference Include="SSH.NET" Version="2024.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

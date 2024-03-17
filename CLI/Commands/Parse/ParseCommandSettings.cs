@@ -6,8 +6,10 @@ namespace CLI.Commands.Parse
 {
     internal class ParseCommandSettings : CommandSettings
     {
+        public static ParseCommandSettings Empty = new();
+
         [Description("The file to parse")]
-        [CommandArgument(0, "[LogFilePath]")]
+        [CommandArgument(0, "<LogFilePath>")]
         public string? LogFilePath { get; set; }
 
         [Description("The list of loggers to include in the output")]
