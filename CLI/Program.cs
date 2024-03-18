@@ -13,7 +13,7 @@ app.Configure(config =>
 {
     config.AddCommand<ParseCommand>("parse");
     config.AddCommand<AnalyzeCommand>("analyze");
-    config.AddCommand<FilesCommand>("files");
+    config.AddCommand<FilesCommand>("files").IsHidden();
     config.AddCommand<DownloadCommand>("download");
 });
 
