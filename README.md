@@ -17,10 +17,12 @@ Head on over to the releases page and grab the latest download for your OS/arch.
 In interactive mode, you will be guided through the process of using `vlogger`.
 There are currently 4 commands available:
 
-1. parse - parse and render a log file
-2. analyze - analyze the log file for common information and known/common issues
-3. download - connect to a robot, export the `systemd` logs for viam, and download them
-4. list files - list previously downloaded files so you can render/analyze them again
+|Command|Description|
+|-|-|
+|[parse](#parse)|parse and render a log file|
+|[analyze](#analyze)|analyze the log file for common information and known/common issues|
+|[download](#download)|connect to a robot, export the `systemd` logs for viam, and download them|
+|list files|list previously downloaded files so you can render/analyze them again|
 
 Note: the download command stores log files in `/tmp`. These files will get cleaned up by the OS so they won't last forever.
 
@@ -28,27 +30,17 @@ Note: the download command stores log files in `/tmp`. These files will get clea
 
 There are currently 3 commands available:
 
-* parse - parse and render the specified log file
-* analyze - analyze the log file for common information and known/common issues
-* download - connect to a robot, export the `systemd` logs for viam, and download them
-
-```text
-USAGE:
-    vlogger [OPTIONS] [COMMAND]
-
-OPTIONS:
-    -h, --help       Prints help information
-    -v, --version    Prints version information
-
-COMMANDS:
-    parse <LogFilePath>
-    analyze <LogFilePath>
-    download <ConnectionString>
-```
+|Command|Description|
+|-|-|
+|[parse](#parse)|parse and render a log file|
+|[analyze](#analyze)|analyze the log file for common information and known/common issues|
+|[download](#download)|connect to a robot, export the `systemd` logs for viam, and download them|
 
 You can pass `--help` to any of the commands to get more information about what parameters and options they take.
 
-#### Parse
+## Commands
+
+### Parse
 
 This command will read the specified log file and render it for easier reading. It will highlight error and warning log levels. It also has the ability to filter on loggers, log levels, and start/end times.
 
@@ -61,7 +53,7 @@ This command will read the specified log file and render it for easier reading. 
 |-s, --since <SINCE>|The start date for the log entries|
 |-u, --until <UNTIL>|The end date for the log entries|
 
-#### Analyze
+### Analyze
 
 This command will read the specified log file and run the list of analyzers. If no list is specified, all analyzers are run. Analyzers can be found in [here](Core/Analyzers/)
 
@@ -69,7 +61,7 @@ This command will read the specified log file and run the list of analyzers. If 
 |-|-|
 |-a, --analyzers <ANALYZERS>|The list of analyzers to run|
 
-#### Download
+### Download
 
 This command will connect to the specified host (using the ssh connection string syntax), export the logs, and download them. You will be prompted for the password on connection. Support for private keys will come in a future release.
 
