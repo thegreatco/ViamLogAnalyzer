@@ -1,30 +1,26 @@
 ﻿using Spectre.Console;
 using Spectre.Console.Rendering;
 
-using static Core.Analyzers.StartupTimeAnalyzer;
-
-
-namespace Core.Analyzers
+namespace Vlogger.Core.Analyzers
 {
-    public class StartupTimeAnalyzer(ParseResults results) : IAnalyzer<StartupTimeResult>
+    public class StartupTimeAnalyzer : IAnalyzer
     {
-        public StartupTimeResult Results { get; protected set; }
+        public Task<AnalyzerResult> Analyze(ParseResults results, CancellationToken cancellationToken = default) => Task.Factory.StartNew(() => AnalyzeInternal(results), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
 
-        public Task Analyze(CancellationToken cancellationToken = default) => Task.Factory.StartNew(AnalyzeInternal, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
-
-        public IRenderable RenderConsoleResults()
+        public IRenderable RenderConsoleResults(StartupTimeResult results)
         {
             var table = new Table()
                 .LeftAligned()
                 .AddColumn("Start Time")
                 .AddColumn("End Time")
                 .AddColumn("Duration");
-            table.AddRow(new Text($"{Results.Start:o}"), new Text($"{Results.End:o}"), new Text($"{Results.Duration}"));
+            table.AddRow(new Text($"{results.Start:o}"), new Text($"{results.End:o}"), new Text($"{results.Duration}"));
             return table;
         }
 
-        private void AnalyzeInternal()
+        private AnalyzerResult AnalyzeInternal(ParseResults results)
         {
+            var r = new StartupTimeResult();
             DateTimeOffset? start = null;
             DateTimeOffset? end = null;
             for (var i = 0; i < results.LogEntries.Count - 1; i++)
@@ -38,10 +34,12 @@ namespace Core.Analyzers
                 }
                 if (start != null && end != null)
                 {
-                    Results = new (start.Value, end.Value);
+                    r = new (start.Value, end.Value);
                     break;
                 }
             }
+
+            return new AnalyzerResult(GetType().Name, RenderConsoleResults(r));
         }
 
         public readonly struct StartupTimeResult(DateTimeOffset Start, DateTimeOffset End)

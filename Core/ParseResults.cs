@@ -1,4 +1,4 @@
-﻿namespace Core
+﻿namespace Vlogger.Core
 {
     public class ParseResults
     {

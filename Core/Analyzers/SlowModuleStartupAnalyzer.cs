@@ -1,36 +1,32 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Spectre.Console;
+﻿using Spectre.Console;
 using Spectre.Console.Rendering;
 
-using static Core.Analyzers.SlowModuleStartupAnalyzer;
-
-namespace Core.Analyzers
+namespace Vlogger.Core.Analyzers
 {
     // "my-module-that-does-stuff" slow startup detected. Elapsed 7.02 seconds
-    public class SlowModuleStartupAnalyzer(ParseResults results) : IAnalyzer<SlowModuleStartupResult>
+    public class SlowModuleStartupAnalyzer : IAnalyzer
     {
-        public Task Analyze(CancellationToken cancellationToken = default) =>
-            Task.Factory.StartNew(AnalyzeInternal,
+        public Task<AnalyzerResult> Analyze(ParseResults results, CancellationToken cancellationToken = default) =>
+            Task.Factory.StartNew(() => AnalyzeInternal(results),
                                   cancellationToken,
                                   TaskCreationOptions.LongRunning,
                                   TaskScheduler.Current);
         
         public SlowModuleStartupResult? Results { get; private set; }
 
-        public IRenderable RenderConsoleResults()
+        public IRenderable RenderConsoleResults(SlowModuleStartupResult? results)
         {
+            if (results == null || results.SlowStarts.Count == 0)
+            {
+                return new Text("No slow startups detected", Color.Green);
+            }
             var table = new Table().LeftAligned()
                                    .AddColumn("Module Name")
                                    .AddColumn("Start Time");
 
-            if (Results != null)
+            if (results != null)
             {
-                foreach (var row in Results.SlowStarts)
+                foreach (var row in results.SlowStarts)
                 {
                     table.AddRow(new Text(row.Key), new Text(row.Value.ToString("g")));
                 }
@@ -39,7 +35,7 @@ namespace Core.Analyzers
             return table;
         }
 
-        private void AnalyzeInternal()
+        private AnalyzerResult AnalyzeInternal(ParseResults results)
         {
             var r = new SlowModuleStartupResult();
             foreach (var e in results.LogEntries)
@@ -67,8 +63,7 @@ namespace Core.Analyzers
                 var timespan = TimeSpan.FromSeconds(double.Parse(m[..end]));
                 r.SlowStarts[moduleName] = timespan;
             }
-
-            Results = r;
+            return new AnalyzerResult(GetType().Name, RenderConsoleResults(r));
         }
 
         public class SlowModuleStartupResult

@@ -1,11 +1,11 @@
 ﻿using Spectre.Console.Rendering;
 
-namespace Core.Analyzers
+namespace Vlogger.Core.Analyzers
 {
-    public interface IAnalyzer<T>
+    public interface IAnalyzer
     {
-        public Task Analyze(CancellationToken cancellationToken = default);
-        public T? Results { get; }
-        public IRenderable RenderConsoleResults();
+        public Task<AnalyzerResult> Analyze(ParseResults results, CancellationToken cancellationToken = default);
     }
+
+    public record class AnalyzerResult(string AnalyzerName, IRenderable RenderedResults);
 }

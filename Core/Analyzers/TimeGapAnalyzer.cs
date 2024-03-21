@@ -1,43 +1,47 @@
 ﻿using Spectre.Console;
 using Spectre.Console.Rendering;
 
-using static Core.Analyzers.TimeGapAnalyzer;
-
-namespace Core.Analyzers
+namespace Vlogger.Core.Analyzers
 {
-    public class TimeGapAnalyzer(ParseResults results, TimeSpan maxGap) : IAnalyzer<IList<TimeGap>>
+    public class TimeGapAnalyzer : IAnalyzer
     {
-        public Task Analyze(CancellationToken cancellationToken = default) => Task.Factory.StartNew(AnalyzeInternal, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
-        public IList<TimeGap>? Results => _timeGapList;
+        public Task<AnalyzerResult> Analyze(ParseResults results, CancellationToken cancellationToken = default) => Task.Factory.StartNew(() => AnalyzeInternal(results), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
 
-        private readonly IList<TimeGap> _timeGapList = new List<TimeGap>();
+        public TimeSpan MaxGap { get; set; } = TimeSpan.FromSeconds(2);
 
-        private void AnalyzeInternal()
+        private AnalyzerResult AnalyzeInternal(ParseResults results)
         {
+            var r = new List<TimeGap>();
             for (var i = 0; i < results.LogEntries.Count - 1; i++)
             {
                 var entry = results.LogEntries[i];
                 if (entry.Message?.Contains("serving") == true)
                 {
-                    return;
+                    return new AnalyzerResult(GetType().Name, RenderConsoleResults(r));
                 }
                 var nextEntry = results.LogEntries[i + 1];
-                if ((nextEntry.SystemdTimestamp - entry.SystemdTimestamp) > maxGap)
+                if ((nextEntry.SystemdTimestamp - entry.SystemdTimestamp) > MaxGap)
                 {
-                    _timeGapList.Add(new(entry.SystemdTimestamp, nextEntry.SystemdTimestamp, entry.Message, nextEntry.Message));
+                    r.Add(new(entry.SystemdTimestamp, nextEntry.SystemdTimestamp, entry.Message, nextEntry.Message));
                 }
             }
+
+            return new AnalyzerResult(GetType().Name, RenderConsoleResults(r));
         }
 
-        public IRenderable RenderConsoleResults()
+        public IRenderable RenderConsoleResults(IList<TimeGap> results)
         {
+            if (results.Count == 0)
+            {
+                return new Text("No time gaps found", Color.Green);
+            }
             var table = new Table()
                 .LeftAligned()
                 .AddColumn("Gap Start")
                 .AddColumn("Gap End")
                 .AddColumn("Time Gap")
                 .AddColumn("Last Log Message");
-            foreach (var gap in _timeGapList)
+            foreach (var gap in results)
             {
                 var gapStyle = new Style();
                 if (gap.Gap > TimeSpan.FromSeconds(5))

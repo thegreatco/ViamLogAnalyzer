@@ -4,7 +4,7 @@ using Spectre.Console.Cli;
 
 namespace CLI.Commands.Files
 {
-    internal class FilesCommand : Command<FilesCommandSettings>
+    internal class FilesCommand(IAnsiConsole console) : Command<FilesCommandSettings>
     {
         public override int Execute(CommandContext context, FilesCommandSettings settings)
         {
@@ -17,6 +17,7 @@ namespace CLI.Commands.Files
 
             var files = Directory.GetFiles(vloggerPath);
             var prompt = new SelectionPrompt<File>().Title("Files")
+                                                    .UseConverter(Render)
                                                     .PageSize(10);
 
             foreach (var file in files)
@@ -24,15 +25,19 @@ namespace CLI.Commands.Files
                 prompt.AddChoice(new File(file));
             }
 
-            AnsiConsole.Prompt(prompt);
+            console.Prompt(prompt);
 
 
             return 0;
         }
 
+        private static string Render(File arg) => arg.Name;
+
         private class File(string filename)
         {
             private readonly FileInfo _fileInfo = new(filename);
+            public string Name => _fileInfo.Name;
+            public string Size => _fileInfo.Length.Bytes().Humanize();
             public override string ToString() => _fileInfo.Name;
         }
     }

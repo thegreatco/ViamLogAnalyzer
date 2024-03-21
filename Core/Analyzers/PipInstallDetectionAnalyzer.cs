@@ -1,56 +1,50 @@
 ﻿using Spectre.Console;
 using Spectre.Console.Rendering;
 
-using static Core.Analyzers.PipInstallDetectionAnalyzer;
-
-namespace Core.Analyzers
+namespace Vlogger.Core.Analyzers
 {
-    public class PipInstallDetectionAnalyzer(ParseResults results) : IAnalyzer<PipInstallDetectionResult>
+    public class PipInstallDetectionAnalyzer : IAnalyzer
     {
-        public PipInstallDetectionResult? Results { get; private set; }
+        public Task<AnalyzerResult> Analyze(ParseResults results, CancellationToken cancellationToken = default) => Task.Factory.StartNew(() => AnalyzeInternal(results), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
 
-        public Task Analyze(CancellationToken cancellationToken = default) => Task.Factory.StartNew(AnalyzeInternal, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
-
-        public IRenderable RenderConsoleResults()
+        public IRenderable RenderConsoleResults(PipInstallDetectionResult? results)
         {
-            if (Results == null)
-                return new Table();
+            if (results == null || results.Messages.Count == 0)
+                return new Text("No pip install detected", Color.Green);
 
             var table = new Table()
                 .LeftAligned()
-                .AddColumn("Detected")
-                .AddColumn("Messages");
-            var messagesTable = new Table().LeftAligned().AddColumn("Messages").HideHeaders();
-            foreach (var message in Results.Messages)
+                .AddColumn("pip Messages");
+            foreach (var message in results.Messages)
             {
-                messagesTable.AddRow(new Text(message));
+                table.AddRow(new Text(message));
             }
-            table.AddRow(new Text(Results.Detected.ToString(), Results.Detected ? new Style(Color.Red) : null), new Text(string.Join(Environment.NewLine, Results.Messages)));
-            return Results.Detected ? table : new Table();
+            return table;
         }
 
-        private void AnalyzeInternal()
+        private AnalyzerResult AnalyzeInternal(ParseResults results)
         {
+            PipInstallDetectionResult? r = null;
             foreach (var e in results.LogEntries)
             {
-                if (e.Message?.Contains("pip") == true)
+                if (e.Message?.Contains("pip") == true && e.Message?.Contains("pipe") == false)
                 {
-                    Results ??= new PipInstallDetectionResult(true);
-                    Results.Messages.Add($"{e.SystemdTimestamp:o} {e.Message}");
+                    r ??= new PipInstallDetectionResult();
+                    r.Messages.Add($"{e.SystemdTimestamp:o} {e.Message}");
                 }
 
                 if (e.Message?.Contains("Installing dependencies") == true)
                 {
-                    Results ??= new PipInstallDetectionResult(true);
+                    r ??= new PipInstallDetectionResult();
                     // Here we want to strip out superfluous whitespace
-                    Results.Messages.Add(e.RawEntry.Replace("  ", " "));
+                    r.Messages.Add(e.Message!.Replace("  ", " "));
                 }
             }
+            return new AnalyzerResult(GetType().Name, RenderConsoleResults(r));
         }
 
-        public class PipInstallDetectionResult(bool detected)
+        public class PipInstallDetectionResult()
         {
-            public bool Detected { get; } = detected;
             public IList<string> Messages { get; } = new List<string>();
         }
     }

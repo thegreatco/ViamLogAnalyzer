@@ -1,8 +1,13 @@
 ﻿using System.Buffers;
 using System.Diagnostics;
 
-namespace Core
+namespace Vlogger.Core
 {
+    // TODOS:
+    // Parse module version out of the module logger field
+    // Fix this log message ending up in the source column
+    // 2024-03-20T11:45:27.292110+0000 station-v5-SAU05AD2 viam-agent[596]: 2024-03-20T11:45:27.291Z        ERROR        robot_server.process.tennibot_station_hardware_control_/root/.viam/packages/data/module/db9922d9-0ccd-4886-bd9b-717220d49542-station_hardware_control-1_2_0-any/run.sh.StdErr        pexec/managed_process.go:242
+    // 2024-03-20T11:45:27.292110+0000 station-v5-SAU05AD2 viam-agent[596]: \_   WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ProtocolError('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))': /simple/paho-mqtt/paho_mqtt-2.0.0-py3-none-any.whl
     public class LogEntry
     {
         public LogEntry(string line, string? nextLogEntry)

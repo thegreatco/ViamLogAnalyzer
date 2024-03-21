@@ -1,4 +1,4 @@
-﻿namespace Core.Parsers
+﻿namespace Vlogger.Core.Parsers
 {
     public class FileParser(string fileName)
     {

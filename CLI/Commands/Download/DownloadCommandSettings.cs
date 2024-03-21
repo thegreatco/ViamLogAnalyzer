@@ -9,9 +9,9 @@ namespace CLI.Commands.Download
     {
         public static DownloadCommandSettings Empty { get; set; } = new DownloadCommandSettings();
 
-        [Description("The machine to connect to in the form <user>@<hosname>")]
+        [Description("The machine to connect to in the form <user>@<hostname>")]
         [CommandArgument(0, "<ConnectionString>")]
-        public string ConnectionString { get; set; }
+        public string? ConnectionString { get; set; }
 
         public override ValidationResult Validate()
         {
