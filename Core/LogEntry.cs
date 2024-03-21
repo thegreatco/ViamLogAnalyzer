@@ -124,7 +124,8 @@ namespace Vlogger.Core
                             }
                         }
 
-                        (var b, n) = JumpToLog(n, "DEBUG", "INFO", "WARN", "ERROR");
+                        // Add a space to the end of the log level to make sure we don't match message text that have words like WARNING in them.
+                        (var b, n) = JumpToLog(n, "DEBUG ", "INFO ", "WARN ", "ERROR ");
                         if (b)
                         {
                             (n, var moduleLogLevel) = ParseNextField(n);
