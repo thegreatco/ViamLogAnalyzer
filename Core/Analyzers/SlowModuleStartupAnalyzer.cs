@@ -37,7 +37,7 @@ namespace Vlogger.Core.Analyzers
 
         private AnalyzerResult AnalyzeInternal(ParseResults results)
         {
-            var r = new SlowModuleStartupResult();
+            var r = new SlowModuleStartupResult(new Dictionary<string, TimeSpan>());
             foreach (var e in results.LogEntries)
             {
                 if (e.Message?.Contains("slow startup detected") != true)
@@ -66,9 +66,6 @@ namespace Vlogger.Core.Analyzers
             return new AnalyzerResult(GetType().Name, RenderConsoleResults(r));
         }
 
-        public class SlowModuleStartupResult
-        {
-            public Dictionary<string, TimeSpan> SlowStarts { get; } = new();
-        }
+        public record class SlowModuleStartupResult(Dictionary<string, TimeSpan> SlowStarts);
     }
 }

@@ -42,10 +42,8 @@ namespace Vlogger.Core.Analyzers
             return new AnalyzerResult(GetType().Name, RenderConsoleResults(r));
         }
 
-        public readonly struct StartupTimeResult(DateTimeOffset Start, DateTimeOffset End)
+        public readonly record struct StartupTimeResult(DateTimeOffset Start, DateTimeOffset End)
         {
-            public DateTimeOffset Start { get; } = Start;
-            public DateTimeOffset End { get; } = End;
             public TimeSpan Duration => End - Start;
         }
     }

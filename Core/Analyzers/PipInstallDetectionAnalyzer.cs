@@ -29,13 +29,13 @@ namespace Vlogger.Core.Analyzers
             {
                 if (e.Message?.Contains("pip") == true && e.Message?.Contains("pipe") == false)
                 {
-                    r ??= new PipInstallDetectionResult();
+                    r ??= new PipInstallDetectionResult(new List<string>());
                     r.Messages.Add($"{e.SystemdTimestamp:o} {e.Message}");
                 }
 
                 if (e.Message?.Contains("Installing dependencies") == true)
                 {
-                    r ??= new PipInstallDetectionResult();
+                    r ??= new PipInstallDetectionResult(new List<string>());
                     // Here we want to strip out superfluous whitespace
                     r.Messages.Add(e.Message!.Replace("  ", " "));
                 }
@@ -43,9 +43,6 @@ namespace Vlogger.Core.Analyzers
             return new AnalyzerResult(GetType().Name, RenderConsoleResults(r));
         }
 
-        public class PipInstallDetectionResult()
-        {
-            public IList<string> Messages { get; } = new List<string>();
-        }
+        public record class PipInstallDetectionResult(IList<string> Messages);
     }
 }

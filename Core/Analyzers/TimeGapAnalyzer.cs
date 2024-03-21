@@ -52,18 +52,14 @@ namespace Vlogger.Core.Analyzers
                 {
                     gapStyle = new Style(Color.Yellow);
                 }
-                table.AddRow(new Text($"{gap.Start:o}", gapStyle), new Text($"{gap.End:o}", gapStyle), new Text($"{gap.Gap}", gapStyle), new Text(gap.StartLogLine ?? string.Empty, gapStyle));
+                table.AddRow(new Text($"{gap.Start:o}", gapStyle), new Text($"{gap.End:o}", gapStyle), new Text($"{gap.Gap}", gapStyle), new Text(gap.StartLogMessage ?? string.Empty, gapStyle));
             }
             return table;
         }
 
-        public readonly struct TimeGap(DateTimeOffset start, DateTimeOffset end, string? startLogMessage, string? endLogMessage)
+        public readonly record struct TimeGap(DateTimeOffset Start, DateTimeOffset End, string? StartLogMessage, string? EndLogMessage)
         {
-            public DateTimeOffset Start { get; } = start;
-            public DateTimeOffset End { get; } = end;
             public TimeSpan Gap => End - Start;
-            public string? StartLogLine { get; } = startLogMessage;
-            public string? EndLogLine { get; } = endLogMessage;
             public override string ToString() => $"{Start:o} - {End:o} ({Gap})";
         }
     }
